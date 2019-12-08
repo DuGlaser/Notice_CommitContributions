@@ -15,19 +15,24 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type discordEmbed struct {
-	Desc  string     `json:"description"`
-	URL   string     `json:"url"`
-	Color int        `json:"color"`
-	Image discordImg `json:"image"`
+type DiscordImage struct {
+	URL string `json:"url"`
+	H   int    `json:"height"`
+	W   int    `json:"width"`
 }
 
-type discordWebhook struct {
+type DiscordEmbed struct {
+	Desc  string       `json:"description"`
+	Image DiscordImage `json:"image"`
+	Color int          `json:"color"`
+	Title string       `json:"title"`
+}
+
+type DiscordWebhook struct {
 	UserName  string         `json:"username"`
 	AvatarURL string         `json:"avatar_url"`
 	Content   string         `json:"content"`
-	Embeds    []discordEmbed `json:"embeds"`
-	TTS       bool           `json:"tts"`
+	Embeds    []DiscordEmbed `json:"embeds"`
 }
 
 func getTime() (time.Time, time.Time) {
@@ -36,20 +41,32 @@ func getTime() (time.Time, time.Time) {
 	return t, y
 }
 
-func sendMessage(url string, dw *discordWebhook) {
+func sendMessage(url string, dw *DiscordWebhook) {
 	j, err := json.Marshal(dw)
 	if err != nil {
-		log.Fatal("Error:", err)
+		fmt.Println("json err:", err)
 		return
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(j))
 	if err != nil {
-		log.Fatal("Error:", err)
+		fmt.Println("new request err:", err)
 		return
 	}
-
 	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("client err:", err)
+		return
+	}
+	if resp.StatusCode == 204 {
+		fmt.Println("sent", dw)
+	} else {
+		fmt.Println("失敗")
+		fmt.Printf("%#v\n", resp)
+	}
 }
 
 func main() {
@@ -84,5 +101,8 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println(q.User.ContrbutionsCollection.TotalCommitContributions)
+
+	dw := &DiscordWebhook{}
+	dw.CreateMessage(q.User.ContrbutionsCollection.TotalCommitContributions)
+	sendMessage(os.Getenv("DISCORD_WEBHOOK_TEST2"), dw)
 }
