@@ -11,7 +11,7 @@ func (dw *DiscordWebhook) CreateMessage(q githubv4.Int) {
 	commit := fmt.Sprintf("今日のコミット数は%v回です！！", q)
 
 	switch {
-	case q <= 2:
+	case q <= 3:
 		dw.UserName = "中野五月"
 		dw.AvatarURL = "https://cdn-ak.f.st-hatena.com/images/fotolife/m/magazine_pocket/20171213/20171213201322.jpg"
 		dw.Embeds = []DiscordEmbed{
